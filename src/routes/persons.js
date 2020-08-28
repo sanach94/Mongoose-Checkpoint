@@ -1,9 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const Person = require('../Model/Person')
+// const { query } = require('express')
 
 
-// add new person
+// Create and Save a Record of a Model
 router.post('/', (req, res) => {
     let info = req.body
     let newPerson = new Person(info)
@@ -12,8 +13,7 @@ router.post('/', (req, res) => {
         .catch(err => console.log(err.message))
 })
 
-// add many people
-
+// Create Many Records with model.create()
 
 router.post('/manyPeople', (req, res) => {
     let info = req.body
@@ -21,21 +21,32 @@ router.post('/manyPeople', (req, res) => {
         .then(manyPeople => res.send(manyPeople))
         .catch(err => console.log(err.message))
 })
+
+// Use model.find() to Search Your Database
+
 router.get('/manyPeople/:name', (req, res) => {
         Person.find({name: req.params.name})
         .then(person => res.send(person))
         .catch(err => console.log(err.message))
 })
+
+// Use model.findOne() to Return a Single Matching Document from Your Database
+
 router.get('/manyPeople/favoriteFoods/:favoriteFoods', (req, res) => {
     Person.findOne({favoriteFoods: req.params.favoriteFoods })
     .then(person => res.send(person))
     .catch(err => console.log(err.message))
 })
+
+// Use model.findById() to Search Your Database By _id
+
 router.get('/manyPeople/id/:id', (req, res) => {
     Person.findById(req.params.id)
     .then(person => res.send(person))
     .catch(err => console.log(err.message))
 })
+
+// Perform Classic Updates by Running Find, Edit, then Save
 
 router.put('/manyPeople/findAndUpdate/:id', (req, res) => {
     Person.findById(req.params.id) 
@@ -49,6 +60,9 @@ router.put('/manyPeople/findAndUpdate/:id', (req, res) => {
             )
         .catch(err => console.log(err.message))
 })
+
+// Perform New Updates on a Document Using model.findOneAndUpdate()
+
 router.put('/manyPeople/findOneAndUpdate/:name', (req, res) => {
     Person.findOneAndUpdate({name: req.params.name},
         {$push: {favoriteFoods: req.body.favoriteFoods}},
@@ -59,6 +73,9 @@ router.put('/manyPeople/findOneAndUpdate/:name', (req, res) => {
     .then(person => res.send(person))
     .catch(err => console.log(err.message))
 })
+
+// Delete One Document Using model.findByIdAndRemove
+
 router.delete('/manyPeople/findOneAndRemove/:id', (req, res) => {
     Person.findOneAndRemove({id: req.params.id})
     .then(response => res.send("person deleted"))
@@ -66,23 +83,26 @@ router.delete('/manyPeople/findOneAndRemove/:id', (req, res) => {
         console.error(err)
 })
 })
+
+// MongoDB and Mongoose - Delete Many Documents with model.remove()
+
   router.delete('/manyPeople/Remove/:name', (req, res) => {
     Person.deleteMany({ name: req.params.name })
         .then(person => res.send({msg: person.deletedCount}))
         .catch(err => console.log(err.message))
     
   })
-  router.get('/manyPeople/NarrowSearch', (req, res) => {
-    query.find({name: "Spagetti"})                  
-        .sort({name: 1})         
+
+//   Chain Search Query Helpers to Narrow Search Results
+
+  router.get('/manyPeople/NarrowSearch/:food', (req, res) => {
+    Person.find({favoriteFoods : req.params.food})                  
+        .sort({name: -1})         
          .limit(2)                
-         .select({age: false} )
-         .exec()                   
-         .then(docs => {
-            console.log(docs)
-          })
-         .catch(err => {
-            console.error(err)
-          })
+         .select({name: false} )
+         .exec((err , users)  => {
+             if(err ) console.log(err)
+             else res.send(users)
+         })                   
         })
 module.exports = router
